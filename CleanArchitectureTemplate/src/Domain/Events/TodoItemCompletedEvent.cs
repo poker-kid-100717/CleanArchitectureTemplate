@@ -1,0 +1,15 @@
+﻿using CleanArchitectureTemplate.Domain.Common;
+using CleanArchitectureTemplate.Domain.Entities;
+
+namespace CleanArchitectureTemplate.Domain.Events
+{
+    public class TodoItemCompletedEvent : DomainEvent
+    {
+        public TodoItemCompletedEvent(TodoItem item)
+        {
+            Item = item;
+        }
+
+        public TodoItem Item { get; }
+    }
+}

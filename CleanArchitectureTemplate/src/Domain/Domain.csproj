@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>CleanArchitectureTemplate.Domain</RootNamespace>
+    <AssemblyName>CleanArchitectureTemplate.Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>

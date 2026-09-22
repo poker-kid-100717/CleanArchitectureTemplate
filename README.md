@@ -38,6 +38,7 @@ The dependency rule is enforced by project references: `Domain` has none, `Appli
 - ASP.NET Core Identity for auth, exposed through a thin controller layer with a consistent API exception filter.
 - Angular client app under `WebUI/ClientApp`, generated against the API via NSwag.
 - Unit tests for domain rules and application handlers, plus integration tests that exercise the EF Core stack against a real (test) database.
+- An in-app **Architecture** page (`/architecture` in the client) covering the same layer diagram and design decisions as this README, for anyone running the app rather than reading the repo.
 
 ## Running it
 
@@ -48,7 +49,7 @@ dotnet ef database update -p src/Infrastructure -s src/WebUI
 dotnet run --project src/WebUI
 ```
 
-The Angular client builds automatically on `dotnet run` via `Microsoft.AspNetCore.SpaServices.AngularCli`; for frontend-only iteration, `cd src/WebUI/ClientApp && npm install && npm start`.
+The Angular client builds automatically on `dotnet run` via `Microsoft.AspNetCore.SpaServices.AngularCli`; for frontend-only iteration, `cd src/WebUI/ClientApp && npm install --legacy-peer-deps && npm start`. This is an Angular 10 app (`@angular/cli` pinned to `~10.1.7` to match) — on Node 17+ its webpack version needs `NODE_OPTIONS=--openssl-legacy-provider` set before `ng build`/`ng serve`, since Node's newer OpenSSL defaults broke webpack 4's hashing.
 
 ## Tests
 

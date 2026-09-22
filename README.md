@@ -2,7 +2,17 @@
 
 A from-scratch build-out of the **Clean Architecture** pattern for ASP.NET Core, used as a working reference for the conventions I default to on real projects: strict dependency direction, CQRS with MediatR, and a thin API layer.
 
-This is a reference/learning project, not a product — the domain (a Todo list app) is intentionally simple so the architecture stays the focus. I use this as the pattern I reach for when standing up a new service: the same layering shows up (in adapted form) in the production systems on my resume.
+This is a reference/learning project, not a product — the domain (a Todo list app) is intentionally simple so the architecture stays the focus.
+
+## Applied in production, not just referenced here
+
+This isn't a pattern I only know from a template. The same Domain/Application/Infrastructure/API separation shows up, adapted to the constraints of each job, in real systems I've shipped:
+
+- **Kenworth Truck Co.** — designed ASP.NET Core services with Clean Architecture, dependency injection, and repository patterns specifically to improve maintainability and testability of workflow-heavy operational applications.
+- **Global Holdings** — architected reusable ASP.NET Core APIs on the same layering to keep business logic decoupled from persistence, across services handling large-file ingestion and background processing.
+- **WorkLens** (github.com/poker-kid-100717/WorkLens) — my public job-intelligence platform uses this same Core/Infrastructure/API boundary in a live Angular + ASP.NET Core + SQL Server stack, not a toy domain.
+
+This repo is where I keep the pattern isolated and current so I'm not re-deriving it from scratch on every new service — the CQRS/MediatR/FluentValidation plumbing here is the same shape I bring to a new project on day one.
 
 ## Layering
 

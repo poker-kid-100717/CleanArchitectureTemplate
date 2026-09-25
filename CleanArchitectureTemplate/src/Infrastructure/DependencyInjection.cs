@@ -35,7 +35,11 @@ namespace CleanArchitectureTemplate.Infrastructure
             // login, refresh, ...), mapped under /api/Users in WebUI. Login can
             // issue either a bearer token or a cookie (?useCookies=true).
             services
-                .AddIdentityApiEndpoints<ApplicationUser>()
+                .AddIdentityApiEndpoints<ApplicationUser>(options =>
+                    // Keep the 128-character key columns the schema has always
+                    // had: composite keys at the default 450 would exceed SQL
+                    // Server's 900-byte clustered index limit.
+                    options.Stores.MaxLengthForKeys = 128)
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 

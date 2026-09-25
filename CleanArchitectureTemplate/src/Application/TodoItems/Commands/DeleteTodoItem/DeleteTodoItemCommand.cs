@@ -21,7 +21,7 @@ namespace CleanArchitectureTemplate.Application.TodoItems.Commands.DeleteTodoIte
             _context = context;
         }
 
-        public async Task<Unit> Handle(DeleteTodoItemCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteTodoItemCommand request, CancellationToken cancellationToken)
         {
             var entity = await _context.TodoItems.FindAsync(request.Id);
 
@@ -33,8 +33,6 @@ namespace CleanArchitectureTemplate.Application.TodoItems.Commands.DeleteTodoIte
             _context.TodoItems.Remove(entity);
 
             await _context.SaveChangesAsync(cancellationToken);
-
-            return Unit.Value;
         }
     }
 }

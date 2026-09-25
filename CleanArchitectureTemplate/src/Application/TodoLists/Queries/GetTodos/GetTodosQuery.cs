@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using CleanArchitectureTemplate.Application.Common.Interfaces;
+﻿using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Application.Common.Security;
 using CleanArchitectureTemplate.Domain.Enums;
 using MediatR;
@@ -19,12 +17,10 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Queries.GetTodos
     public class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, TodosVm>
     {
         private readonly IApplicationDbContext _context;
-        private readonly IMapper _mapper;
 
-        public GetTodosQueryHandler(IApplicationDbContext context, IMapper mapper)
+        public GetTodosQueryHandler(IApplicationDbContext context)
         {
             _context = context;
-            _mapper = mapper;
         }
 
         public async Task<TodosVm> Handle(GetTodosQuery request, CancellationToken cancellationToken)
@@ -38,7 +34,7 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Queries.GetTodos
 
                 Lists = await _context.TodoLists
                     .AsNoTracking()
-                    .ProjectTo<TodoListDto>(_mapper.ConfigurationProvider)
+                    .Select(TodoListDto.Projection)
                     .OrderBy(t => t.Title)
                     .ToListAsync(cancellationToken)
             };

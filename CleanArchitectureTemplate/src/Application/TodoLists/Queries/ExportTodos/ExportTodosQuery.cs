@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using CleanArchitectureTemplate.Application.Common.Interfaces;
+﻿using CleanArchitectureTemplate.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -17,13 +15,11 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Queries.ExportTodos
     public class ExportTodosQueryHandler : IRequestHandler<ExportTodosQuery, ExportTodosVm>
     {
         private readonly IApplicationDbContext _context;
-        private readonly IMapper _mapper;
         private readonly ICsvFileBuilder _fileBuilder;
 
-        public ExportTodosQueryHandler(IApplicationDbContext context, IMapper mapper, ICsvFileBuilder fileBuilder)
+        public ExportTodosQueryHandler(IApplicationDbContext context, ICsvFileBuilder fileBuilder)
         {
             _context = context;
-            _mapper = mapper;
             _fileBuilder = fileBuilder;
         }
 
@@ -33,7 +29,7 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Queries.ExportTodos
 
             var records = await _context.TodoItems
                     .Where(t => t.ListId == request.ListId)
-                    .ProjectTo<TodoItemRecord>(_mapper.ConfigurationProvider)
+                    .Select(TodoItemRecord.Projection)
                     .ToListAsync(cancellationToken);
 
             vm.Content = _fileBuilder.BuildTodoItemsFile(records);

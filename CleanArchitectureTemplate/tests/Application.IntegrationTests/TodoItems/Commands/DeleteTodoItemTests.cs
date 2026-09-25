@@ -14,12 +14,12 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoItems.Comma
     public class DeleteTodoItemTests : TestBase
     {
         [Test]
-        public void ShouldRequireValidTodoItemId()
+        public async Task ShouldRequireValidTodoItemId()
         {
             var command = new DeleteTodoItemCommand { Id = 99 };
 
-            FluentActions.Invoking(() =>
-                SendAsync(command)).Should().Throw<NotFoundException>();
+            await FluentActions.Invoking(() =>
+                SendAsync(command)).Should().ThrowAsync<NotFoundException>();
         }
 
         [Test]

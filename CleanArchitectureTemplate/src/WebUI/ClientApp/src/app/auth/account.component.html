@@ -1,0 +1,43 @@
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6 col-lg-5">
+    <h1 class="h3 mb-3">{{ isRegister() ? 'Create an account' : 'Log in' }}</h1>
+
+    <form (ngSubmit)="submit()" #form="ngForm">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input id="email" name="email" type="email" class="form-control" autocomplete="username"
+               required [(ngModel)]="email" />
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input id="password" name="password" type="password" class="form-control"
+               [attr.autocomplete]="isRegister() ? 'new-password' : 'current-password'"
+               required [(ngModel)]="password" />
+        @if (isRegister()) {
+          <div class="form-text">At least 6 characters, with an uppercase letter, a digit and a symbol.</div>
+        }
+      </div>
+
+      @if (errors().length) {
+        <div class="alert alert-danger py-2" role="alert">
+          @for (error of errors(); track error) {
+            <div>{{ error }}</div>
+          }
+        </div>
+      }
+
+      <button type="submit" class="btn btn-primary w-100" [disabled]="busy() || form.invalid">
+        {{ isRegister() ? 'Register' : 'Log in' }}
+      </button>
+    </form>
+
+    <p class="text-muted small mt-3">
+      @if (isRegister()) {
+        Already have an account? <a routerLink="/login" [queryParams]="{ returnUrl: destination() }">Log in</a>
+      } @else {
+        New here? <a routerLink="/register" [queryParams]="{ returnUrl: destination() }">Create an account</a>
+        &middot; Demo: <code>administrator&#64;localhost</code> / <code>Administrator1!</code>
+      }
+    </p>
+  </div>
+</div>

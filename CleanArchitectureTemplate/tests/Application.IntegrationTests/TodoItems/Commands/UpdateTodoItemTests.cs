@@ -15,7 +15,7 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoItems.Comma
     public class UpdateTodoItemTests : TestBase
     {
         [Test]
-        public void ShouldRequireValidTodoItemId()
+        public async Task ShouldRequireValidTodoItemId()
         {
             var command = new UpdateTodoItemCommand
             {
@@ -23,8 +23,8 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoItems.Comma
                 Title = "New Title"
             };
 
-            FluentActions.Invoking(() =>
-                SendAsync(command)).Should().Throw<NotFoundException>();
+            await FluentActions.Invoking(() =>
+                SendAsync(command)).Should().ThrowAsync<NotFoundException>();
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoItems.Comma
             item.LastModifiedBy.Should().NotBeNull();
             item.LastModifiedBy.Should().Be(userId);
             item.LastModified.Should().NotBeNull();
-            item.LastModified.Should().BeCloseTo(DateTime.Now, 1000);
+            item.LastModified.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(1000));
         }
     }
 }

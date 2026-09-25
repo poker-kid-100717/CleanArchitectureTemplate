@@ -3,7 +3,6 @@ using CleanArchitectureTemplate.Infrastructure.Files;
 using CleanArchitectureTemplate.Infrastructure.Identity;
 using CleanArchitectureTemplate.Infrastructure.Persistence;
 using CleanArchitectureTemplate.Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,20 +31,17 @@ namespace CleanArchitectureTemplate.Infrastructure
 
             services.AddScoped<IDomainEventService, DomainEventService>();
 
+            // ASP.NET Core Identity with its built-in API endpoints (register,
+            // login, refresh, ...), mapped under /api/Users in WebUI. Login can
+            // issue either a bearer token or a cookie (?useCookies=true).
             services
-                .AddDefaultIdentity<ApplicationUser>()
+                .AddIdentityApiEndpoints<ApplicationUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-
-            services.AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
             services.AddTransient<IDateTime, DateTimeService>();
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddTransient<ICsvFileBuilder, CsvFileBuilder>();
-
-            services.AddAuthentication()
-                .AddIdentityServerJwt();
 
             services.AddAuthorization(options =>
             {

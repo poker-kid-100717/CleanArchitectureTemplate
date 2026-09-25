@@ -1,88 +1,91 @@
 ﻿using CleanArchitectureTemplate.Application.Common.Interfaces;
 using CleanArchitectureTemplate.Infrastructure.Identity;
 using CleanArchitectureTemplate.Infrastructure.Persistence;
-using CleanArchitectureTemplate.WebUI;
 using MediatR;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using NUnit.Framework;
 using Respawn;
+using Respawn.Graph;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Testcontainers.MsSql;
 
+/// <summary>
+/// Runs the application (via WebApplicationFactory) against a real SQL Server
+/// in Docker. The app applies its migrations on startup; Respawn wipes the
+/// data between tests.
+/// </summary>
 [SetUpFixture]
 public class Testing
 {
-    private static IConfigurationRoot _configuration;
+    private const string SqlServerImage = "mcr.microsoft.com/mssql/server:2022-latest";
+
+    private static MsSqlContainer _database;
+    private static WebApplicationFactory<Program> _factory;
     private static IServiceScopeFactory _scopeFactory;
-    private static Checkpoint _checkpoint;
+    private static Respawner _respawner;
+    private static string _connectionString;
     private static string _currentUserId;
 
     [OneTimeSetUp]
-    public void RunBeforeAnyTests()
+    public async Task RunBeforeAnyTests()
     {
-        var builder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", true, true)
-            .AddEnvironmentVariables();
+        _database = new MsSqlBuilder(SqlServerImage).Build();
+        await _database.StartAsync();
 
-        _configuration = builder.Build();
-
-        var startup = new Startup(_configuration);
-
-        var services = new ServiceCollection();
-
-        services.AddSingleton(Mock.Of<IWebHostEnvironment>(w =>
-            w.EnvironmentName == "Development" &&
-            w.ApplicationName == "CleanArchitectureTemplate.WebUI"));
-
-        services.AddLogging();
-
-        startup.ConfigureServices(services);
-
-        // Replace service registration for ICurrentUserService
-        // Remove existing registration
-        var currentUserServiceDescriptor = services.FirstOrDefault(d =>
-            d.ServiceType == typeof(ICurrentUserService));
-
-        services.Remove(currentUserServiceDescriptor);
-
-        // Register testing version
-        services.AddTransient(provider =>
-            Mock.Of<ICurrentUserService>(s => s.UserId == _currentUserId));
-
-        _scopeFactory = services.BuildServiceProvider().GetService<IServiceScopeFactory>();
-
-        _checkpoint = new Checkpoint
+        _connectionString = new SqlConnectionStringBuilder(_database.GetConnectionString())
         {
-            TablesToIgnore = new[] { "__EFMigrationsHistory" }
-        };
+            InitialCatalog = "CleanArchitectureTemplateTestDb"
+        }.ConnectionString;
 
-        EnsureDatabase();
-    }
+        // Read by Program at startup, before the factory's own overrides apply.
+        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", _connectionString);
+        Environment.SetEnvironmentVariable("UseInMemoryDatabase", "false");
 
-    private static void EnsureDatabase()
-    {
-        using var scope = _scopeFactory.CreateScope();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<ICurrentUserService>();
+                services.AddTransient(_ =>
+                    Mock.Of<ICurrentUserService>(s => s.UserId == _currentUserId));
+            });
+        });
 
-        var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+        _scopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
 
-        context.Database.Migrate();
+        _respawner = await Respawner.CreateAsync(_connectionString, new RespawnerOptions
+        {
+            TablesToIgnore = new Table[] { "__EFMigrationsHistory" }
+        });
     }
 
     public static async Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request)
     {
         using var scope = _scopeFactory.CreateScope();
 
-        var mediator = scope.ServiceProvider.GetService<ISender>();
+        var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
         return await mediator.Send(request);
+    }
+
+    public static async Task SendAsync(IRequest request)
+    {
+        using var scope = _scopeFactory.CreateScope();
+
+        var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
+
+        await mediator.Send(request);
     }
 
     public static async Task<string> RunAsDefaultUserAsync()
@@ -99,7 +102,7 @@ public class Testing
     {
         using var scope = _scopeFactory.CreateScope();
 
-        var userManager = scope.ServiceProvider.GetService<UserManager<ApplicationUser>>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         var user = new ApplicationUser { UserName = userName, Email = userName };
 
@@ -107,7 +110,7 @@ public class Testing
 
         if (roles.Any())
         {
-            var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             foreach (var role in roles)
             {
@@ -131,7 +134,7 @@ public class Testing
 
     public static async Task ResetState()
     {
-        await _checkpoint.Reset(_configuration.GetConnectionString("DefaultConnection"));
+        await _respawner.ResetAsync(_connectionString);
         _currentUserId = null;
     }
 
@@ -140,7 +143,7 @@ public class Testing
     {
         using var scope = _scopeFactory.CreateScope();
 
-        var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         return await context.FindAsync<TEntity>(keyValues);
     }
@@ -150,7 +153,7 @@ public class Testing
     {
         using var scope = _scopeFactory.CreateScope();
 
-        var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         context.Add(entity);
 
@@ -161,13 +164,22 @@ public class Testing
     {
         using var scope = _scopeFactory.CreateScope();
 
-        var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         return await context.Set<TEntity>().CountAsync();
     }
 
     [OneTimeTearDown]
-    public void RunAfterAnyTests()
+    public async Task RunAfterAnyTests()
     {
+        if (_factory != null)
+        {
+            await _factory.DisposeAsync();
+        }
+
+        if (_database != null)
+        {
+            await _database.DisposeAsync();
+        }
     }
 }

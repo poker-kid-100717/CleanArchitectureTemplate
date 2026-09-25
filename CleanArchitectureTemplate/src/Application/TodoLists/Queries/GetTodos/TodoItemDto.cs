@@ -1,10 +1,10 @@
-﻿using AutoMapper;
-using CleanArchitectureTemplate.Application.Common.Mappings;
-using CleanArchitectureTemplate.Domain.Entities;
+﻿using CleanArchitectureTemplate.Domain.Entities;
+using System;
+using System.Linq.Expressions;
 
 namespace CleanArchitectureTemplate.Application.TodoLists.Queries.GetTodos
 {
-    public class TodoItemDto : IMapFrom<TodoItem>
+    public class TodoItemDto
     {
         public int Id { get; set; }
 
@@ -18,10 +18,17 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Queries.GetTodos
 
         public string Note { get; set; }
 
-        public void Mapping(Profile profile)
+        /// <summary>
+        /// Projection EF Core translates to SQL, so only these columns are read.
+        /// </summary>
+        public static Expression<Func<TodoItem, TodoItemDto>> Projection => item => new TodoItemDto
         {
-            profile.CreateMap<TodoItem, TodoItemDto>()
-                .ForMember(d => d.Priority, opt => opt.MapFrom(s => (int)s.Priority));
-        }
+            Id = item.Id,
+            ListId = item.ListId,
+            Title = item.Title,
+            Done = item.Done,
+            Priority = (int)item.Priority,
+            Note = item.Note
+        };
     }
 }

@@ -35,6 +35,15 @@ export class AuthService {
     await this.login(email, password);
   }
 
+  /**
+   * Forgets the cached session, e.g. after the server rejects a request
+   * because the cookie expired or was cleared in another tab.
+   */
+  clearSession(): void {
+    this.email.set(null);
+    this.loaded = Promise.resolve();
+  }
+
   async logout(): Promise<void> {
     await firstValueFrom(this.http.post('/api/Users/logout', {}));
     this.email.set(null);

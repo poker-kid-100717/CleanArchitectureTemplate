@@ -1,18 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-nav-menu',
-  templateUrl: './nav-menu.component.html',
-  styleUrls: ['./nav-menu.component.scss']
+  imports: [RouterLink, RouterLinkActive],
+  templateUrl: './nav-menu.component.html'
 })
 export class NavMenuComponent {
-  isExpanded = false;
+  protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
-  collapse() {
-    this.isExpanded = false;
+  readonly expanded = signal(false);
+
+  constructor() {
+    this.auth.ensureLoaded();
   }
 
-  toggle() {
-    this.isExpanded = !this.isExpanded;
+  async logout(): Promise<void> {
+    await this.auth.logout();
+    await this.router.navigateByUrl('/');
   }
 }

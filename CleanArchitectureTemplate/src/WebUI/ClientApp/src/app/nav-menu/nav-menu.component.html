@@ -1,40 +1,34 @@
 <header>
-  <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+  <nav class="navbar navbar-expand-sm bg-body border-bottom shadow-sm mb-4">
     <div class="container">
-      <a class="navbar-brand" [routerLink]="['/']">CleanArchitectureTemplate.WebUI</a>
-      <button class="navbar-toggler"
-              type="button"
-              data-toggle="collapse"
-              data-target=".navbar-collapse"
-              aria-label="Toggle navigation"
-              [attr.aria-expanded]="isExpanded"
-              (click)="toggle()">
+      <a class="navbar-brand fw-semibold" routerLink="/">Clean Architecture</a>
+      <button class="navbar-toggler" type="button" aria-controls="main-nav" aria-label="Toggle navigation"
+              [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse"
-           [ngClass]="{ show: isExpanded }">
-        <app-login-menu></app-login-menu>
-        <ul class="navbar-nav flex-grow">
-          <li class="nav-item"
-              [routerLinkActive]="['link-active']"
-              [routerLinkActiveOptions]="{ exact: true }">
-            <a class="nav-link text-dark" [routerLink]="['/']">Home</a>
-          </li>
-          <li class="nav-item" [routerLinkActive]="['link-active']">
-            <a class="nav-link text-dark" [routerLink]="['/counter']">Counter</a>
-          </li>
-          <li class="nav-item" [routerLinkActive]="['link-active']">
-            <a class="nav-link text-dark" [routerLink]="['/fetch-data']">Fetch data</a>
-          </li>
-          <li class="nav-item" [routerLinkActive]="['link-active']">
-            <a class="nav-link text-dark" [routerLink]="['/todo']">Todo</a>
-          </li>
-          <li class="nav-item" [routerLinkActive]="['link-active']">
-            <a class="nav-link text-dark" [routerLink]="['/architecture']">Architecture</a>
+      <div id="main-nav" class="collapse navbar-collapse" [class.show]="expanded()">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-dark" href="/api" target="_blank">API</a>
+            <a class="nav-link" routerLink="/todo" routerLinkActive="active">Todo</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/architecture" routerLinkActive="active">Architecture</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/api" target="_blank" rel="noreferrer">API</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav align-items-sm-center">
+          @if (auth.isAuthenticated()) {
+            <li class="nav-item"><span class="navbar-text me-sm-2">{{ auth.userName() }}</span></li>
+            <li class="nav-item"><button type="button" class="btn btn-link nav-link" (click)="logout()">Log out</button></li>
+          } @else {
+            <li class="nav-item"><a class="nav-link" routerLink="/register">Register</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/login">Log in</a></li>
+          }
         </ul>
       </div>
     </div>

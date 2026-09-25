@@ -13,12 +13,12 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoLists.Comma
     public class CreateTodoListTests : TestBase
     {
         [Test]
-        public void ShouldRequireMinimumFields()
+        public async Task ShouldRequireMinimumFields()
         {
             var command = new CreateTodoListCommand();
 
-            FluentActions.Invoking(() =>
-                SendAsync(command)).Should().Throw<ValidationException>();
+            await FluentActions.Invoking(() =>
+                SendAsync(command)).Should().ThrowAsync<ValidationException>();
         }
 
         [Test]
@@ -34,8 +34,8 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoLists.Comma
                 Title = "Shopping"
             };
 
-            FluentActions.Invoking(() =>
-                SendAsync(command)).Should().Throw<ValidationException>();
+            await FluentActions.Invoking(() =>
+                SendAsync(command)).Should().ThrowAsync<ValidationException>();
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace CleanArchitectureTemplate.Application.IntegrationTests.TodoLists.Comma
             list.Should().NotBeNull();
             list.Title.Should().Be(command.Title);
             list.CreatedBy.Should().Be(userId);
-            list.Created.Should().BeCloseTo(DateTime.Now, 10000);
+            list.Created.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(10000));
         }
     }
 }

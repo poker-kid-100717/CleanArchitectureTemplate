@@ -23,7 +23,7 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Commands.UpdateTodoLis
             _context = context;
         }
 
-        public async Task<Unit> Handle(UpdateTodoListCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateTodoListCommand request, CancellationToken cancellationToken)
         {
             var entity = await _context.TodoLists.FindAsync(request.Id);
 
@@ -35,8 +35,6 @@ namespace CleanArchitectureTemplate.Application.TodoLists.Commands.UpdateTodoLis
             entity.Title = request.Title;
 
             await _context.SaveChangesAsync(cancellationToken);
-
-            return Unit.Value;
         }
     }
 }

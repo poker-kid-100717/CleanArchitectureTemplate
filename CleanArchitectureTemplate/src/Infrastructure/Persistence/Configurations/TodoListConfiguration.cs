@@ -14,6 +14,12 @@ namespace CleanArchitectureTemplate.Infrastructure.Persistence.Configurations
 
             builder
                 .OwnsOne(b => b.Colour);
+
+            // Every list has a colour (defaults to White), so the owned value
+            // object is required rather than an optional dependent.
+            builder
+                .Navigation(b => b.Colour)
+                .IsRequired();
         }
     }
 }

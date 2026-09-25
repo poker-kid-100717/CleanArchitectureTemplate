@@ -9,7 +9,7 @@ namespace CleanArchitectureTemplate.Infrastructure.Files.Maps
         public TodoItemRecordMap()
         {
             AutoMap(CultureInfo.InvariantCulture);
-            Map(m => m.Done).ConvertUsing(c => c.Done ? "Yes" : "No");
+            Map(m => m.Done).Convert(args => args.Value.Done ? "Yes" : "No");
         }
     }
 }

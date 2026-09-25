@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: CleanArchitectureTemplate
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Integration tests start SQL Server 2022 with Testcontainers on the
+      # runner's Docker daemon.
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+      - name: Check EF Core migrations are up to date
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          dotnet ef migrations has-pending-model-changes --configuration Release -p src/Infrastructure -s src/WebUI
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CleanArchitectureTemplate/src/WebUI/ClientApp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: CleanArchitectureTemplate/src/WebUI/ClientApp/package-lock.json
+
+      - run: npm ci
+      - run: npx ng build
+      - run: npx ng test --watch=false

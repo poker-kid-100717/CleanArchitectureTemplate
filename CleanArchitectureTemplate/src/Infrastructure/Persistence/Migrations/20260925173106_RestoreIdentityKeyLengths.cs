@@ -9,12 +9,21 @@ namespace CleanArchitectureTemplate.Infrastructure.Persistence.Migrations
     /// them back to 128 (Stores.MaxLengthForKeys) so upgraded and fresh
     /// databases match. SQL Server can't shrink a column inside a primary
     /// key, so the keys are dropped and re-created around the change.
+    /// Keys are identifiers and can't be safely truncated, so if any stored
+    /// value is longer than 128 the migration stops (and rolls back) with a
+    /// message naming the rows to fix, instead of failing inside ALTER COLUMN.
     /// </summary>
     public partial class RestoreIdentityKeyLengths : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(@"
+IF EXISTS (SELECT 1 FROM [AspNetUserLogins] WHERE DATALENGTH([LoginProvider]) / 2 > 128 OR DATALENGTH([ProviderKey]) / 2 > 128)
+    OR EXISTS (SELECT 1 FROM [AspNetUserTokens] WHERE DATALENGTH([LoginProvider]) / 2 > 128 OR DATALENGTH([Name]) / 2 > 128)
+    THROW 50000, 'RestoreIdentityKeyLengths: AspNetUserLogins (LoginProvider, ProviderKey) or AspNetUserTokens (LoginProvider, Name) has values longer than 128 characters. Remove or shorten those rows (for logins, the user re-links the external provider), then run the migration again.', 1;
+");
+
             migrationBuilder.DropPrimaryKey(name: "PK_AspNetUserTokens", table: "AspNetUserTokens");
             migrationBuilder.DropPrimaryKey(name: "PK_AspNetUserLogins", table: "AspNetUserLogins");
 

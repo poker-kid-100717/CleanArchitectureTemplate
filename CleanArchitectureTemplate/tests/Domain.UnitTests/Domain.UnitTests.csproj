@@ -16,7 +16,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <!-- Pinned to the last Apache-2.0 release; FluentAssertions 8+ requires a commercial license. -->
-    <PackageReference Include="FluentAssertions" Version="7.2.2" />
+    <PackageReference Include="FluentAssertions" Version="8.11.0" />
   </ItemGroup>
 
   <ItemGroup>

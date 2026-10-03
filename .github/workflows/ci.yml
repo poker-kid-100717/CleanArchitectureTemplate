@@ -63,3 +63,21 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npx ng build
       - run: npx ng test --watch=false
+
+  cloudflare:
+    name: Cloudflare deploy dry-run
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: bash -n scripts/cloudflare-deploy.sh
+      - run: bash scripts/cloudflare-deploy.sh
+        env:
+          VALIDATE_ONLY: "true"
+          APP_HOST: todo.example.com
+          DATABASE_URL: "Server=tcp:dry-run.database.windows.net,1433;Database=CleanArchitectureDb;User ID=dry-run;Password=dry-run;Encrypt=True"

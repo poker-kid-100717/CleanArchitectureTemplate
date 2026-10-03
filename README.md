@@ -48,7 +48,8 @@ The dependency rule is enforced by project references: `Domain` has none, `Appli
 - **MediatR 12.5** and **FluentValidation 12** in the Application layer
 - **Angular 22** with Bootstrap 5 and ng-bootstrap
 - **NUnit 4**, FluentAssertions 7, Moq, Respawn, Testcontainers
-- **GitHub Actions**: build, tests (including SQL Server integration tests), migration drift check, Angular build and tests
+- **GitHub Actions**: build, tests (including SQL Server integration tests), migration drift check, Angular build and tests, Cloudflare deploy
+- **Cloudflare** Workers + Containers hosting
 
 MediatR (13+) and FluentAssertions (8+) now need commercial licenses, so both stay on their last Apache-2.0 releases. AutoMapper was removed rather than pinned. Its free versions all carry an unpatched high-severity advisory (CVE-2026-32933), and explicit projections replace it with less code.
 
@@ -69,6 +70,20 @@ cd src/WebUI/ClientApp && npm ci && npm start   # Angular dev server on http://l
 The default connection string targets SQL Server LocalDB, so on Windows you can skip the Docker step. The seed creates `administrator@localhost` / `Administrator1!` and a sample list. API docs are served at `/api`.
 
 `dotnet publish` builds the Angular app and ships it in `wwwroot`, so the published site serves the SPA and the API from one host. Debug builds regenerate `wwwroot/api/specification.json` and `ClientApp/src/app/web-api-client.ts` with NSwag.
+
+## Deploy to Cloudflare
+
+Deployment runs from GitHub Actions on every push to `main` (`.github/workflows/deploy-cloudflare.yml`), the same way as the rest of my portfolio: a Worker serves the Angular app from the edge and routes `/api` and `/health` to the ASP.NET Core API running in a Cloudflare Container (`CleanArchitectureTemplate/Dockerfile`). The API migrates and seeds the database on startup.
+
+Repository **secrets**:
+
+| Secret | Required | Purpose |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | yes | Wrangler deploys |
+| `CLOUDFLARE_ACCOUNT_ID` | yes | Wrangler deploys |
+| `DATABASE_URL` | recommended | SQL Server connection string, for example Azure SQL Database: `Server=tcp:<server>.database.windows.net,1433;Database=CleanArchitectureDb;User ID=...;Password=...;Encrypt=True`. Without it the API runs on EF Core's in-memory provider, reset whenever the container restarts. |
+
+Optional repository variable: `APP_HOST` for a custom hostname. Until the Cloudflare secrets exist the deploy job skips cleanly. `scripts/cloudflare-deploy.sh` can also be run locally with the same environment variables.
 
 ## Tests
 

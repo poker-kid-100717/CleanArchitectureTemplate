@@ -1,0 +1,4 @@
+# Generated Cloudflare deployment files
+cloudflare/wrangler.generated.jsonc
+cloudflare/node_modules/
+cloudflare/package-lock.json

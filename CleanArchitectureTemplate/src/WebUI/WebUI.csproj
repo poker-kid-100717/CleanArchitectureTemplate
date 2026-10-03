@@ -40,8 +40,9 @@
     <Exec EnvironmentVariables="ASPNETCORE_ENVIRONMENT=NSwag" Command="$(NSwagExe_Net100) run nswag.json /variables:Configuration=$(Configuration)" />
   </Target>
 
-  <!-- On publish, build the Angular app and ship it in wwwroot. -->
-  <Target Name="PublishAngular" AfterTargets="ComputeFilesToPublish">
+  <!-- On publish, build the Angular app and ship it in wwwroot. The Cloudflare image sets
+       SkipSpaBuild=true because the Worker serves the Angular app from the edge. -->
+  <Target Name="PublishAngular" AfterTargets="ComputeFilesToPublish" Condition="'$(SkipSpaBuild)' != 'true'">
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
 
